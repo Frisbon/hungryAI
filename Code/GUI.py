@@ -3,30 +3,32 @@
 import gradio as gr
 from predict import predict_image
 
-def classify_food(image):
+def classify_food(image_numpy):
     """
     A wrapper function to connect the predictor to the Gradio interface.
     'image' here is a NumPy array from the Gradio component.
     """
-    # Gradio provides a temp file path for the uploaded image
-    predicted_class, confidence = predict_image(image)
+    # The predict_image function expects a file path, so we save the numpy array
+    # from Gradio as a temporary file and pass the path.
+    # Note: Gradio handles the temporary file cleanup.
+    predicted_class, confidence = predict_image(image_numpy)
     
     if "Error" in predicted_class:
         return predicted_class
     
+    # Format the output for Gradio's Label component
     return {predicted_class: confidence}
 
 
 # Create the Gradio interface
 iface = gr.Interface(
     fn=classify_food,
-    inputs=gr.Image(type="filepath", label="Upload a Food Image"),
+    # Input is now a NumPy array, which is more direct for the predict function
+    inputs=gr.Image(type="numpy", label="Upload a Food Image"),
     outputs=gr.Label(num_top_classes=1, label="Prediction"),
     title="GustoAI: Food Classifier",
     description="Upload an image of food, and this model will try to identify it. This is a project for the AI Lab course.",
-    examples=[
-        # Add paths to some example images from your test set if you like
-    ]
+    allow_flagging="never" # Disables the flagging button
 )
 
 # Launch the app
