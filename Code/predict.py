@@ -1,65 +1,47 @@
-import os
 import torch
-from model import OurCNN # Or get_pretrained_model if you use that
+from model import OurCNN 
 from dataloader import data_transforms
-import cv2
 
-# --- START OF PATHING CHANGES ---
-# This makes the script robust to being called from any directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
-
-class_names_path = os.path.join(project_root, 'Dataset', 'class_names.txt')
-model_path = os.path.join(project_root, 'Model', 'instrument_model.pth')
-# --- END OF PATHING CHANGES ---
-
-
-# --- 1. Load class names ---
+# loading class names from a text file
 try:
-    with open(class_names_path, 'r') as f:
+    with open('Dataset/class_names.txt', 'r') as f:
         class_names = [line.strip() for line in f]
 except FileNotFoundError:
-    print(f"Error: class_names.txt not found at {class_names_path}")
-    class_names = [f"Class {i}" for i in range(30)] # Fallback
+    print("Error: txt not found")
+    class_names = [f"Class {i}" for i in range(30)] 
 
 NUM_CLASSES = len(class_names)
 
-
-# --- 2. Initialize Model ---
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = OurCNN(num_classes=NUM_CLASSES).to(device) # Or your best model architecture
+model = OurCNN(num_classes=NUM_CLASSES).to(device) 
 
 try:
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load('Model/instrument_model.pth', map_location=device))
 except FileNotFoundError:
-    print(f"Error: Model file not found at {model_path}")
-    # We can't proceed if the model doesn't exist, so we'll let the predict function handle this
+    print("Error: Model file not found")
     model = None
 
 if model:
-    model.eval()
+    model.eval() 
 
-# --- 3. Prediction Function ---
+# loads an image, preprocesses it, and returns the predicted class (str) and confidence % (float)
 def predict_image(image_numpy):
-    """
-    Loads an image, preprocesses it, and returns the predicted class and confidence.
-    """
     if model is None:
-        return "Error: Model not loaded. Please train the model first.", 0.0
+        return "Error: Ao train the model first.", 0.0
 
     try:
-        # The input from Gradio is a NumPy array, so we use it directly
-        image = data_transforms['val'](image_numpy).unsqueeze(0).to(device)
+        # input from Gradio is a NumPy array
+        image = data_transforms['val'](image_numpy).unsqueeze(0).to(device) 
 
-        with torch.no_grad():
+        with torch.no_grad(): 
             outputs = model(image)
-            probabilities = torch.nn.functional.softmax(outputs, dim=1)
-            confidence, predicted_class_idx = torch.max(probabilities, 1)
+            probTensor = torch.nn.functional.softmax(outputs, dim=1)
+            confScore, predicted_class_idx = torch.max(probTensor, 1) 
             
             predicted_class_name = class_names[predicted_class_idx.item()]
-            confidence_score = confidence.item()
+            confidence_score = confScore.item()
 
         return predicted_class_name, confidence_score
 
-    except Exception as e:
-        return f"An error occurred during prediction: {e}", 0.0
+    except Exception as _:
+        return "Error during prediction", 0.0

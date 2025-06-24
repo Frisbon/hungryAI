@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import cv2
 
-class FoodDataset(Dataset): # You can rename this to InstrumentDataset if you like
+class InstrDataset(Dataset): 
     def __init__(self, csv_file, root_dir, transform=None):
         self.annotations = pd.read_csv(csv_file)
         self.root_dir = root_dir
@@ -28,15 +28,15 @@ class FoodDataset(Dataset): # You can rename this to InstrumentDataset if you li
 
         return image, label
 
-# --- START OF CHANGES ---
-# Define separate transforms for training (with augmentation) and validation (without)
+
+#different transformations for data augmentation
 data_transforms = {
     'train': transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((128, 128)),
-        transforms.RandomHorizontalFlip(p=0.5), # Randomly flip images
-        transforms.RandomRotation(15),         # Randomly rotate images
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), # Adjust color
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(15),         
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), 
         transforms.ToTensor()
     ]),
     'val': transforms.Compose([

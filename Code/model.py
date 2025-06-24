@@ -1,11 +1,10 @@
-# In Code/model.py
 from torch import nn
 
 class OurCNN(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
         
-        # The deeper convolutional feature extractor
+        # Layer del CNN
         self.cnn_layers = nn.Sequential(
             # Block 1
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
@@ -28,13 +27,12 @@ class OurCNN(nn.Module):
             nn.MaxPool2d(2, 2) # Image size: 16 -> 8
         )
         
-        # The classifier with automatic input size detection
+        # Er classifaier
         self.mlp_layers = nn.Sequential(
             nn.Flatten(),
-            
-            # --- THE FIX ---
-            # nn.LazyLinear automatically detects the input features (16384 in this case)
-            # so you don't have to calculate it manually.
+
+            # nn.LazyLinear automatically detects the input features (16384 in this case) so I don't have to calculate it manually.
+            # im also lazy btw
             nn.LazyLinear(1024), 
             
             nn.ReLU(),
